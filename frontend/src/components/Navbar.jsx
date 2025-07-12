@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../store/slices/authSlice';
+// import { useSelector, useDispatch } from 'react-redux';
+// import { logout } from '../store/slices/authSlice';
 import { Menu, X, BookOpen, User, LogOut } from 'lucide-react';
 import useAuthStore from '../ZustandStore/Auth';
 

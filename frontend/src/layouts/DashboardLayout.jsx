@@ -1,10 +1,11 @@
-import { useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
+import useAuthStore from '../ZustandStore/Auth';
 
 const DashboardLayout = ({ children }) => {
-  const { isAuthenticated } = useSelector((state) => state.auth);
+
+  const {isAuthenticated} = useAuthStore();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;

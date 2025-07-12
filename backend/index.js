@@ -3,6 +3,7 @@ const app = express();
 
 require("dotenv").config();
 const cors = require("cors")
+const path = require("path")
 const PORT = process.env.PORT || 5000 || 8000
 
 app.use(cors({
@@ -30,16 +31,28 @@ app.use(cookieParser());
 // });
 
 const authRoutes = require("./routes/Auth.routes")
-app.use("/api/auth",authRoutes);
+const aiAPiRoutes = require("./routes/AiApi.routes")
+const chatRoutes = require("./routes/chat.routes")
 
+app.use("/api/auth",authRoutes);
+app.use("/api/requirement",aiAPiRoutes);
+app.use("/api/chat",chatRoutes);
+
+
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
 
 const {dbconnect} = require("./config/database")
 dbconnect();
 
-app.listen(PORT , ()=>{
-   console.log(`server Started successfully at port no. ${PORT}`)
-})
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend" , "dist" , "index.html"));
+});
+
+
+app.listen(PORT, () => {
+  console.log("server is running on PORT:" + PORT);
+});
 
 app.get("/" , (req,res)=>{
    res.send(`<h1> This is homepage, response from server hance the server is up and running <h1/>`)

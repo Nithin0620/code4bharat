@@ -12,6 +12,7 @@ const SignupPage = () => {
       email: '',
       password: '',
       confirmPassword: '',
+      whichClass:'',
    });
 
    const navigate = useNavigate();
@@ -72,19 +73,34 @@ const SignupPage = () => {
                </div>
 
                <div>
-               <label className="block text-sm font-medium text-gray-700">Email</label>
-               <div className="mt-1 relative">
-                  <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                  <input
-                     name="email"
-                     type="email"
-                     required
-                     value={formData.email}
-                     onChange={handleChange}
-                     className="pl-10 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
-                     placeholder="Enter your email"
-                  />
+                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <div className="mt-1 relative">
+                     <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                     <input
+                        name="email"
+                        type="email"
+                        required
+                        value={formData.email}
+                        onChange={handleChange}
+                        className="pl-10 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+                        placeholder="Enter your email"
+                     />
+                  </div>
                </div>
+               <div>
+                  <label className="block text-sm font-medium text-gray-700">Current Class</label>
+                  <div className="mt-1 relative">
+                     <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                     <input
+                        name="whichClass"
+                        type=""
+                        required
+                        value={formData.whichClass}
+                        onChange={handleChange}
+                        className="pl-10 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+                        placeholder="Tell us your current Class"
+                     />
+                  </div>
                </div>
 
                <div>

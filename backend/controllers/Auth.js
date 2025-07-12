@@ -7,17 +7,15 @@ const jwt = require("jsonwebtoken");
 
 exports.signup = async (req, res) => {
   try {
-    const { name, email, password, confirmPassword, otp } = req.body;
+    const { name, email, password, confirmPassword, otp , whichClass } = req.body;
 
-    // 1. Validate required fields
-    if (!name || !email || !password || !confirmPassword || !otp) {
+    if (!name || !email || !password || !confirmPassword || !whichClass || !otp) {
       return res.status(403).json({
         success: false,
         message: "All fields are required",
       });
     }
 
-    // 2. Validate passwords match
     if (password !== confirmPassword) {
       return res.status(400).json({
         success: false,
@@ -25,7 +23,6 @@ exports.signup = async (req, res) => {
       });
     }
 
-    // 3. Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -34,10 +31,8 @@ exports.signup = async (req, res) => {
       });
     }
 
-    // 4. Get most recent OTP for the email
     const recentOtp = await OTP.findOne({ email }).sort({ createdAt: -1 });
 
-    // 5. Validate OTP presence and match
     if (!recentOtp || String(recentOtp.otp) !== String(otp)) {
       return res.status(400).json({
         success: false,
@@ -45,8 +40,7 @@ exports.signup = async (req, res) => {
       });
     }
 
-    // 6. Optional: check OTP expiry (10 minutes)
-    const maxAge = 10 * 60 * 1000; // 10 min in ms
+    const maxAge = 10 * 60 * 1000; 
     const timeDiff = Date.now() - new Date(recentOtp.createdAt).getTime();
     if (timeDiff > maxAge) {
       return res.status(400).json({
@@ -55,9 +49,8 @@ exports.signup = async (req, res) => {
       });
     }
 
-    // 7. Create default profile
     const defaultProfile = {
-      class: "Not specified",
+      class: whichClass,
       schoolOrCollege: "Not specified",
       board: "CBSE",
       interests: [],
@@ -72,13 +65,10 @@ exports.signup = async (req, res) => {
 
     const profileResponse = await Profile.create(defaultProfile);
 
-    // 8. Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 9. Generate profile picture
     const profilePic = `https://api.dicebear.com/5.x/initials/svg?seed=${encodeURIComponent(name)}`;
 
-    // 10. Create user
     const userPayload = {
       name,
       email,
