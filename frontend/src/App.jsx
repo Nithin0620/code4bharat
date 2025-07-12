@@ -15,7 +15,7 @@ import DashboardLayout from './layouts/DashboardLayout';
 import SignupPage from './pages/SignupPage';
 import OtpVerificationPage from './pages/OtpVerificationPage';
 import useAuthStore from './ZustandStore/Auth';
-import PublicRoute from './components/publicRoute';
+import PublicRoute from './components/PublicRoute';
 
 
 function App() {
