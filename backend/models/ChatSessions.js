@@ -10,6 +10,18 @@ const chatSessionSchema = new mongoose.Schema({
       type: String, 
       default: "New Chat" 
    },
+   class_num: { 
+      type: Number, 
+      required: true 
+   },
+   subject: { 
+      type: String, 
+      required: true 
+   },
+   chapter: { 
+      type: String, 
+      required: true 
+   },
    createdAt: { 
       type: Date, 
       default: Date.now 
