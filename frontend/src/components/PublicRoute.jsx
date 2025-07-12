@@ -8,9 +8,7 @@ const PublicRoute = ({ children }) => {
    if (isAuthenticated) {
       return <Navigate to="/dashboard" replace />;
    }
-   if (!isAuthenticated) {
-      return <Navigate to="/login" replace />;
-   }
+   
   return children;
 };
 

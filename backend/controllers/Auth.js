@@ -241,23 +241,33 @@ exports.logout = (req, res) => {
    }
 };
 
-
-exports.checkAuth = (req, res) => {
+exports.checkAuth = async (req, res) => {
   try {
-    if (!req.user) {
+    if (!req.user || !req.user.userId) {
       return res.status(401).json({
         success: false,
         message: "Not authenticated",
       });
     }
 
+    // 🔥 Fetch full user from DB
+    const user = await User.findById(req.user.userId).select("-password"); // remove password field
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
     return res.status(200).json({
       success: true,
       message: "User authenticated",
-      data: req.user,
+      data: user,
     });
   } catch (error) {
     console.log("Error in checkAuth controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+

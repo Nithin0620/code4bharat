@@ -23,24 +23,36 @@ const useAuthStore = create((set, get) => ({
   loginFailure: (error) => set({ loading: false, error }),
 
    checkAuth: async () => {
-   try {
-      const response = await axios.get(`${BASE_URL}/auth/check`, { withCredentials: true });
-
-      if (response.data?.success) {
-         set({
-         isAuthenticated: true,
-         user: response.data.data,
+      try {
+         const response = await axios.get(`${BASE_URL}/auth/check`, {
+            withCredentials: true,
          });
-      } else {
+
+         const { success, data } = response.data;
+
+         if (success && data) {
+            console.log("✅ Authenticated user:", data); // Debug
+            set({
+            isAuthenticated: true,
+            user: data,
+            });
+         } else {
+            console.warn("⚠️ Auth check failed without 401:", response.data);
+            set({ isAuthenticated: false, user: null });
+         }
+      } 
+      catch (error) {
+         if (error.response?.status === 401) {
+            console.log("🚫 User is not logged in.");
+         } else {
+            console.error("❌ Unexpected error in checkAuth:", error);
+         }
          set({ isAuthenticated: false, user: null });
+      } finally {
+         set({ loading: false });
       }
-   } catch (error) {
-      console.log("Error in checkAuth:", error);
-      set({ isAuthenticated: false, user: null });
-   } finally {
-      set({ loading: false });
-   }
-},
+   },
+
 
 
    logout: async () => {

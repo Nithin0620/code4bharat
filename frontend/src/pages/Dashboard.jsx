@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 const Dashboard = () => {
   const cardsRef = useRef(null);
   const statsRef = useRef(null);
-  const {isAuthenticated} = useAuthStore();
+  const {isAuthenticated,user} = useAuthStore();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,6 +24,7 @@ const Dashboard = () => {
       { opacity: 1, scale: 1, duration: 0.8, stagger: 0.1, delay: 0.3, ease: 'back.out(1.7)' }
     );
     if(isAuthenticated) navigate("/dashboard")
+    console.log(isAuthenticated,user)
   }, []);
 
   return (

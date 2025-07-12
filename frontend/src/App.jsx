@@ -17,9 +17,11 @@ import OtpVerificationPage from './pages/OtpVerificationPage';
 import useAuthStore from './ZustandStore/Auth';
 import PublicRoute from './components/PublicRoute';
 
+import { Navigate } from 'react-router-dom';
+
 
 function App() {
-  const {checkAuth} = useAuthStore();
+  const {checkAuth,isAuthenticated,user} = useAuthStore();
 
   useEffect(() => {
     checkAuth();
@@ -39,11 +41,14 @@ function App() {
               </>
             } />
             
-            <Route path="/login" element={
-              <PublicRoute>
-                <LoginPage />
-              </PublicRoute>
-            } />
+            <Route
+              path="/login"
+              element={
+                isAuthenticated === true
+                  ? <Navigate to="/dashboard" replace />
+                  : <LoginPage />
+              }
+            />
 
             <Route path="/signup" element={
               <PublicRoute>
@@ -61,7 +66,9 @@ function App() {
             {/* Protected Routes */}
             <Route path="/dashboard" element={
               <DashboardLayout>
-                <Dashboard />
+                {
+                  isAuthenticated && <Dashboard />
+                }
               </DashboardLayout>
             } />
             <Route path="/studybuddy" element={
