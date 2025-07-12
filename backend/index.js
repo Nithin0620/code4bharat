@@ -45,9 +45,8 @@ app.use(express.static(path.join(__dirname, '../frontend/dist')));
 const {dbconnect} = require("./config/database")
 dbconnect();
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend" , "dist" , "index.html"));
-});
+// Must come LAST — after all routes
+
 
 
 app.listen(PORT, () => {
@@ -55,5 +54,9 @@ app.listen(PORT, () => {
 });
 
 app.get("/" , (req,res)=>{
-   res.send(`<h1> This is homepage, response from server hance the server is up and running <h1/>`)
+  res.send(`<h1> This is homepage, response from server hance the server is up and running <h1/>`)
 })
+
+app.get(/^\/(?!api).*/, (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+});
