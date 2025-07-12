@@ -36,9 +36,25 @@ function App() {
                 <Footer />
               </>
             } />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage/>} />
-            <Route path="/verify-email" element={<OtpVerificationPage/>} />
+            
+            <Route path="/login" element={
+              <PublicRoute>
+                <LoginPage />
+              </PublicRoute>
+            } />
+
+            <Route path="/signup" element={
+              <PublicRoute>
+                <SignupPage />
+              </PublicRoute>
+            } />
+
+            <Route path="/verify-email" element={
+              <PublicRoute>
+                <OtpVerificationPage />
+              </PublicRoute>
+            } />
+
             
             {/* Protected Routes */}
             <Route path="/dashboard" element={

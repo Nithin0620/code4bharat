@@ -8,6 +8,33 @@ const HomePage = () => {
   const statsRef = useRef(null);
   const servicesRef = useRef(null);
 
+  const aboutRef = useRef(null);
+  const contactRef = useRef(null);
+
+    useEffect(() => {
+    if (location.state?.scrollTo) {
+      const section = location.state.scrollTo;
+      scrollToSection(section);
+      window.history.replaceState({}, document.title); // Clear state
+    }
+
+    // For in-page navigation (no reload)
+    const handleInAppScroll = (e) => {
+      scrollToSection(e.detail);
+    };
+    window.addEventListener('scrollToSection', handleInAppScroll);
+    return () => window.removeEventListener('scrollToSection', handleInAppScroll);
+  }, [location]);
+
+  const scrollToSection = (section) => {
+    if (section === 'about') {
+      window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
+    } else if (section === 'contact') {
+      contactRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+
   useEffect(() => {
     // Hero animation
     gsap.fromTo(
@@ -92,10 +119,10 @@ const HomePage = () => {
       </section>
 
       {/* Services Section */}
-      <section className="py-16">
+      <section ref={aboutRef} className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Kya Services Hai</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Services</h2>
             <p className="text-xl text-gray-600">Discover our comprehensive learning tools designed for students</p>
           </div>
           
@@ -163,7 +190,7 @@ const HomePage = () => {
       </section>
 
       {/* Contact Section */}
-      <section className="py-16">
+      <section  ref={contactRef} className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Contact Us</h2>

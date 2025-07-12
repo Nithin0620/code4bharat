@@ -15,6 +15,17 @@ const Navbar = () => {
     navigate('/');
   };
 
+  const handleScroll = (section) => {
+    // If already on homepage, trigger scroll
+    if (window.location.pathname === '/') {
+      window.dispatchEvent(new CustomEvent('scrollToSection', { detail: section }));
+    } else {
+      // Navigate to homepage and pass scroll target via state
+      navigate('/', { state: { scrollTo: section } });
+    }
+  };
+
+
   return (
     <nav className="bg-white shadow-lg sticky top-0 z-[55]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -33,10 +44,17 @@ const Navbar = () => {
                   <Link to="/" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                     Home
                   </Link>
-                  <Link to="/about" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                  <Link
+                    onClick={() => handleScroll('about')}
+                    className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
                     About
                   </Link>
-                  <Link to="/contact" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+
+                  <Link
+                    onClick={() => handleScroll('contact')}
+                    className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
                     Contact
                   </Link>
                   <Link to="/login" className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors">
@@ -88,10 +106,17 @@ const Navbar = () => {
                 <Link to="/" className="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium">
                   Home
                 </Link>
-                <Link to="/about" className="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium">
+                <Link
+                  onClick={() => handleScroll('about')}
+                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
                   About
                 </Link>
-                <Link to="/contact" className="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium">
+
+                <Link
+                  onClick={() => handleScroll('contact')}
+                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
                   Contact
                 </Link>
                 <Link to="/login" className="block px-3 py-2 bg-blue-600 text-white rounded-md text-base font-medium">

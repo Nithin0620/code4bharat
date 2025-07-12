@@ -1,12 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { BookOpen, Users, Brain, CreditCard, TrendingUp, Clock, Award } from 'lucide-react';
+import useAuthStore from '../ZustandStore/Auth';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const cardsRef = useRef(null);
   const statsRef = useRef(null);
+  const {isAuthenticated} = useAuthStore();
+  const navigate = useNavigate();
 
   useEffect(() => {
+    
     gsap.fromTo(
       statsRef.current.children,
       { opacity: 0, y: 20 },
@@ -18,6 +23,7 @@ const Dashboard = () => {
       { opacity: 0, scale: 0.9 },
       { opacity: 1, scale: 1, duration: 0.8, stagger: 0.1, delay: 0.3, ease: 'back.out(1.7)' }
     );
+    if(isAuthenticated) navigate("/dashboard")
   }, []);
 
   return (
