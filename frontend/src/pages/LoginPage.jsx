@@ -1,23 +1,31 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { loginSuccess } from '../store/slices/authSlice';
+// import { useDispatch } from 'react-redux';
+// import { loginSuccess } from '../store/slices/authSlice';
 import { BookOpen, Mail, Lock } from 'lucide-react';
+import useAuthStore from '../ZustandStore/Auth';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const {login,isAuthenticated} = useAuthStore();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Simple mock login
     if (email && password) {
-      dispatch(loginSuccess({ name: 'Student', email }));
-      navigate('/dashboard');
+      console.log(email,password)
+      login({email,password},navigate)
     }
   };
+
+
+  // useEffect(() => {
+  //   if (isAuthenticated) {
+  //     navigate('/');
+  //   }
+  // }, [isAuthenticated, navigate]);
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -85,12 +93,15 @@ const LoginPage = () => {
           </form>
           
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600" onClick={()=>navigate("/signup")}>
               Don't have an account?{' '}
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+              <a className="font-medium text-blue-600 hover:text-blue-500">
                 Sign up here
               </a>
             </p>
+          </div>
+          <div onClick={()=>navigate("/")} className="flex justify-end font-thin text-thin">
+            - Back to Home
           </div>
         </div>
       </div>

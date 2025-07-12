@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { store } from './store/store';
+// import { Provider } from 'react-redux';
+import { useEffect } from 'react';
+// import { store } from './store/store';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -11,12 +12,21 @@ import Quizzes from './pages/Quizzes';
 import Flashcards from './pages/Flashcards';
 import ChatBot from './pages/ChatBot';
 import DashboardLayout from './layouts/DashboardLayout';
+import SignupPage from './pages/SignupPage';
+import OtpVerificationPage from './pages/OtpVerificationPage';
+import useAuthStore from './ZustandStore/Auth';
 
 function App() {
+  const {checkAuth} = useAuthStore();
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
   return (
-    <Provider store={store}>
+  
       <Router>
         <div className="min-h-screen bg-gray-50">
+          
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={
@@ -27,6 +37,8 @@ function App() {
               </>
             } />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage/>} />
+            <Route path="/verify-email" element={<OtpVerificationPage/>} />
             
             {/* Protected Routes */}
             <Route path="/dashboard" element={
@@ -57,7 +69,6 @@ function App() {
           </Routes>
         </div>
       </Router>
-    </Provider>
   );
 }
 

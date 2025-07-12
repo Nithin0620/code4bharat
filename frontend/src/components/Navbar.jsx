@@ -3,15 +3,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../store/slices/authSlice';
 import { Menu, X, BookOpen, User, LogOut } from 'lucide-react';
+import useAuthStore from '../ZustandStore/Auth';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const {logout,isAuthenticated,user} = useAuthStore();
 
   const handleLogout = () => {
-    dispatch(logout());
+    logout();
     navigate('/');
   };
 
@@ -41,6 +41,9 @@ const Navbar = () => {
                   </Link>
                   <Link to="/login" className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors">
                     Login
+                  </Link>
+                  <Link to="/signup" className='block px-3 py-2 bg-blue-600 text-white rounded-md text-base font-medium'>
+                    Signup
                   </Link>
                 </>
               ) : (
@@ -93,6 +96,9 @@ const Navbar = () => {
                 </Link>
                 <Link to="/login" className="block px-3 py-2 bg-blue-600 text-white rounded-md text-base font-medium">
                   Login
+                </Link>
+                <Link to="/signup" className='block px-3 py-2 bg-blue-600 text-white rounded-md text-base font-medium'>
+                  Signup
                 </Link>
               </>
             ) : (
