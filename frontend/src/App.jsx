@@ -15,6 +15,8 @@ import DashboardLayout from './layouts/DashboardLayout';
 import SignupPage from './pages/SignupPage';
 import OtpVerificationPage from './pages/OtpVerificationPage';
 import useAuthStore from './ZustandStore/Auth';
+import PublicRoute from './components/publicRoute';
+
 
 function App() {
   const {checkAuth} = useAuthStore();
