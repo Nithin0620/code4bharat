@@ -7,8 +7,9 @@ const jwt = require("jsonwebtoken");
 
 exports.signup = async (req, res) => {
   try {
-    const { name, email, password, confirmPassword, otp , whichClass } = req.body;
+    const { name, email, password, confirmPassword, otp, whichClass } = req.body;
 
+    // 1. Validate required fields
     if (!name || !email || !password || !confirmPassword || !whichClass || !otp) {
       return res.status(403).json({
         success: false,
@@ -16,6 +17,7 @@ exports.signup = async (req, res) => {
       });
     }
 
+    // 2. Validate password match
     if (password !== confirmPassword) {
       return res.status(400).json({
         success: false,
@@ -23,6 +25,7 @@ exports.signup = async (req, res) => {
       });
     }
 
+    // 3. Check for existing user
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -31,8 +34,8 @@ exports.signup = async (req, res) => {
       });
     }
 
+    // 4. Validate OTP
     const recentOtp = await OTP.findOne({ email }).sort({ createdAt: -1 });
-
     if (!recentOtp || String(recentOtp.otp) !== String(otp)) {
       return res.status(400).json({
         success: false,
@@ -40,7 +43,7 @@ exports.signup = async (req, res) => {
       });
     }
 
-    const maxAge = 10 * 60 * 1000; 
+    const maxAge = 10 * 60 * 1000; // 10 minutes
     const timeDiff = Date.now() - new Date(recentOtp.createdAt).getTime();
     if (timeDiff > maxAge) {
       return res.status(400).json({
@@ -49,7 +52,23 @@ exports.signup = async (req, res) => {
       });
     }
 
+    // 5. Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 6. Generate profile picture
+    const profilePic = `https://api.dicebear.com/5.x/initials/svg?seed=${encodeURIComponent(name)}`;
+
+    // 7. Create user (initially without profile)
+    const newUser = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      profilePic,
+    });
+
+    // 8. Create profile and attach user ID
     const defaultProfile = {
+      user: newUser._id,
       class: whichClass,
       schoolOrCollege: "Not specified",
       board: "CBSE",
@@ -65,25 +84,11 @@ exports.signup = async (req, res) => {
 
     const profileResponse = await Profile.create(defaultProfile);
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // 9. Link profile to user
+    newUser.profile = profileResponse._id;
+    await newUser.save();
 
-    const profilePic = `https://api.dicebear.com/5.x/initials/svg?seed=${encodeURIComponent(name)}`;
-
-    const userPayload = {
-      name,
-      email,
-      password: hashedPassword,
-      profilePic,
-      profile: profileResponse._id,
-    };
-
-    const newUser = (await User.create(userPayload)).populate("profile");
-
-    // 11. Update profile with user ID
-    profileResponse.user = newUser._id;
-    await profileResponse.save();
-
-    // 12. Generate JWT token
+    // 10. Generate JWT token
     const tokenPayload = { email: newUser.email, userId: newUser._id };
     const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
       expiresIn: "2h",
@@ -92,10 +97,10 @@ exports.signup = async (req, res) => {
     newUser.token = token;
     await newUser.save();
 
-    // 13. Remove sensitive fields
+    // 11. Remove sensitive fields before sending
     newUser.password = undefined;
 
-    // 14. Set cookie
+    // 12. Set cookie
     res.cookie("jwt", token, {
       expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
       httpOnly: true,
@@ -103,13 +108,14 @@ exports.signup = async (req, res) => {
       sameSite: "lax",
     });
 
-    // 15. Send response
+    // 13. Send response
     return res.status(200).json({
       success: true,
       message: "Signup successful",
       token,
       data: newUser,
     });
+
   } catch (error) {
     console.error("Signup error:", error);
     return res.status(500).json({

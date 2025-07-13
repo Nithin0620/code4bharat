@@ -85,6 +85,7 @@ const useAuthStore = create((set, get) => ({
       set({ loading: true, error: null });
       try {
          const response = await axios.post(`${BASE_URL}/auth/signup`, finalData);
+         console.log(response)
          if (response.data?.success) {
          get().loginSuccess(response.data.data);
          navigate('/'); 

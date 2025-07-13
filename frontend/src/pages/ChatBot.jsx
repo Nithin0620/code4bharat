@@ -29,6 +29,7 @@ const ChatBot = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showVideos, setShowVideos] = useState(false);
   const messagesEndRef = useRef(null);
+  const messegeRef = useRef(null);
 
   // Zustand stores
   const { 
@@ -62,7 +63,8 @@ const ChatBot = () => {
   // console.log(userClass)
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messegeRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -472,7 +474,7 @@ const handleSendMessage = async (e) => {
           </div>
 
           {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4" >
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -495,9 +497,9 @@ const handleSendMessage = async (e) => {
                         <Bot className="h-4 w-4" />
                       )}
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1" >
                       <p className="text-sm">{message.content}</p>
-                      <p className={`text-xs mt-1 ${
+                      <p  style={{ maxHeight: '400px' }} ref={messegeRef} className={`text-xs mt-1 ${
                         message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
                       }`}>
                         {formatTime(message.timestamp)}
