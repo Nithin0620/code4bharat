@@ -82,11 +82,11 @@ const Dashboard = () => {
 
   useEffect(() => {
     
-    gsap.fromTo(
-      statsRef.current.children,
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out' }
-    );
+    // gsap.fromTo(
+    //   statsRef.current.children,
+    //   { opacity: 0, y: 20 },
+    //   { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out' }
+    // );
 
     gsap.fromTo(
       cardsRef.current.children,
@@ -105,7 +105,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div ref={statsRef} className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
+      {/* <div ref={statsRef} className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between">
             <div>
@@ -135,7 +135,7 @@ const Dashboard = () => {
             <Award className="h-8 w-8 text-green-600" />
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Learning Resources Grid */}
       <div className="mb-8">
@@ -182,7 +182,7 @@ const Dashboard = () => {
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+      {/* <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
         <div className="space-y-4">
           <div className="flex items-center space-x-4">
@@ -215,7 +215,7 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Chapter Modal */}
       {isModalOpen && selectedSubject && (

@@ -8,10 +8,10 @@ const Sidebar = () => {
 
   const menuItems = [
     { path: '/dashboard', name: 'Dashboard', icon: Home },
-    { path: '/studybuddy', name: 'StudyBuddy', icon: Users },
+    // { path: '/studybuddy', name: 'StudyBuddy', icon: Users },
+    { path: '/chatbot', name: 'ChatBot', icon: MessageCircle },
     { path: '/quizzes', name: 'Quizzes', icon: Brain },
     { path: '/flashcards', name: 'Flashcards', icon: CreditCard },
-    { path: '/chatbot', name: 'ChatBot', icon: MessageCircle },
   ];
 
   // Close mobile menu when route changes
