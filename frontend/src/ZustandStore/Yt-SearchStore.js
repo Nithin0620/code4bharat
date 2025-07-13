@@ -1,7 +1,10 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:4000/api/requirement';
+const BASE_URL = process.env.NODE_ENV === "development"
+  ? "http://localhost:4000/api/requirement"
+  : "/api/requirement";
+
 
 export const useYoutubeStore = create((set) => ({
   loading: false,
