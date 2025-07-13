@@ -77,7 +77,7 @@ exports.signup = async (req, res) => {
       profile: profileResponse._id,
     };
 
-    const newUser = await User.create(userPayload);
+    const newUser = (await User.create(userPayload)).populate("profile");
 
     // 11. Update profile with user ID
     profileResponse.user = newUser._id;
@@ -251,7 +251,7 @@ exports.checkAuth = async (req, res) => {
     }
 
     // 🔥 Fetch full user from DB
-    const user = await User.findById(req.user.userId).select("-password"); // remove password field
+    const user = await User.findById(req.user.userId).populate("profile").select("-password"); // remove password field
 
     if (!user) {
       return res.status(404).json({
