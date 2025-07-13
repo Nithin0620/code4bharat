@@ -2,7 +2,7 @@ const axios = require('axios');
 
 
 exports.getTopVideos = async (req, res) => {
-  const query = req.query.query; 
+  const query = req.query.query; // from ?query= in URL
 
   if (!query) {
     return res.status(400).json({
@@ -12,7 +12,7 @@ exports.getTopVideos = async (req, res) => {
   }
 
   try {
-    const aiApiUrl = `https://your-external-api.com/yt-search?query=${encodeURIComponent(query)}`;
+    const aiApiUrl = `https://InsaneJSK-Code4Bharat-API.hf.space/yt-search?query=${encodeURIComponent(query)}`;
 
     const response = await axios.get(aiApiUrl);
     const videos = response.data;

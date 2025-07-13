@@ -24,7 +24,8 @@ const Navbar = () => {
       navigate('/', { state: { scrollTo: section } });
     }
   };
-
+  
+  console.log("this is the user in navbar",user);
 
   return (
     <nav className="bg-white shadow-lg sticky top-0 z-[55]">
