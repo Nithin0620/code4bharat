@@ -1,14 +1,85 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { BookOpen, Users, Brain, CreditCard, TrendingUp, Clock, Award } from 'lucide-react';
+import { BookOpen, Users, Brain, CreditCard, TrendingUp, Clock, Award, X, CheckCircle } from 'lucide-react';
 import useAuthStore from '../ZustandStore/Auth';
 import { useNavigate } from 'react-router-dom';
+import chaptersData from '../data/chapters_per_subject.json';
 
 const Dashboard = () => {
   const cardsRef = useRef(null);
   const statsRef = useRef(null);
   const {isAuthenticated,user} = useAuthStore();
   const navigate = useNavigate();
+  const {formData} = useAuthStore();
+  
+  // Modal state
+  const [selectedSubject, setSelectedSubject] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [completedChapters, setCompletedChapters] = useState({});
+
+  // Get subjects based on user's class
+  const getUserSubjects = () => {
+    const userClass = formData?.whichClass || '1';
+    const classData = chaptersData[userClass];
+    
+    if (!classData) return [];
+    
+    return Object.keys(classData).map(subject => ({
+      name: subject,
+      chapters: classData[subject]
+    }));
+  };
+
+  const userSubjects = getUserSubjects();
+
+  // Subject colors for variety
+  const subjectColors = [
+    { bg: 'bg-blue-100', text: 'text-blue-600', progress: 'bg-blue-600' },
+    { bg: 'bg-green-100', text: 'text-green-600', progress: 'bg-green-600' },
+    { bg: 'bg-purple-100', text: 'text-purple-600', progress: 'bg-purple-600' },
+    { bg: 'bg-orange-100', text: 'text-orange-600', progress: 'bg-orange-600' },
+    { bg: 'bg-pink-100', text: 'text-pink-600', progress: 'bg-pink-600' },
+    { bg: 'bg-indigo-100', text: 'text-indigo-600', progress: 'bg-indigo-600' },
+    { bg: 'bg-yellow-100', text: 'text-yellow-600', progress: 'bg-yellow-600' },
+    { bg: 'bg-red-100', text: 'text-red-600', progress: 'bg-red-600' },
+    { bg: 'bg-teal-100', text: 'text-teal-600', progress: 'bg-teal-600' },
+    { bg: 'bg-cyan-100', text: 'text-cyan-600', progress: 'bg-cyan-600' }
+  ];
+
+  const handleSubjectClick = (subject) => {
+    setSelectedSubject(subject);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedSubject(null);
+  };
+
+  const toggleChapterCompletion = (subjectName, chapterIndex) => {
+    setCompletedChapters(prev => {
+      const subjectKey = subjectName;
+      const currentCompleted = prev[subjectKey] || [];
+      const isCompleted = currentCompleted.includes(chapterIndex);
+      
+      if (isCompleted) {
+        return {
+          ...prev,
+          [subjectKey]: currentCompleted.filter(index => index !== chapterIndex)
+        };
+      } else {
+        return {
+          ...prev,
+          [subjectKey]: [...currentCompleted, chapterIndex]
+        };
+      }
+    });
+  };
+
+  const getProgressPercentage = (subject) => {
+    const completedForSubject = completedChapters[subject.name] || [];
+    return Math.round((completedForSubject.length / subject.chapters.length) * 100);
+  };
 
   useEffect(() => {
     
@@ -69,80 +140,46 @@ const Dashboard = () => {
 
       {/* Learning Resources Grid */}
       <div className="mb-8">
-        <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Learning Resources</h2>
-        <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer">
-            <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-              <BookOpen className="h-6 w-6 text-blue-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Mathematics</h3>
-            <p className="text-gray-600 text-sm mb-4">Advanced algebra and calculus concepts</p>
-            <div className="bg-gray-200 rounded-full h-2 mb-2">
-              <div className="bg-blue-600 h-2 rounded-full" style={{ width: '75%' }}></div>
-            </div>
-            <p className="text-xs text-gray-500">75% Complete</p>
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">
+          Your Subjects - Class {formData?.whichClass || 'Not set'}
+        </h2>
+        {userSubjects.length > 0 ? (
+          <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {userSubjects.map((subject, index) => {
+              const colorScheme = subjectColors[index % subjectColors.length];
+              const progressPercentage = getProgressPercentage(subject);
+              
+              return (
+                <div 
+                  key={subject.name}
+                  onClick={() => handleSubjectClick(subject)}
+                  className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                >
+                  <div className={`${colorScheme.bg} w-12 h-12 rounded-lg flex items-center justify-center mb-4`}>
+                    <BookOpen className={`h-6 w-6 ${colorScheme.text}`} />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 capitalize">
+                    {subject.name.replace(/[-_]/g, ' ')}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    {subject.chapters.length} chapters available
+                  </p>
+                  <div className="bg-gray-200 rounded-full h-2 mb-2">
+                    <div 
+                      className={`${colorScheme.progress} h-2 rounded-full transition-all duration-300`} 
+                      style={{ width: `${progressPercentage}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-500">{progressPercentage}% Complete</p>
+                </div>
+              );
+            })}
           </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer">
-            <div className="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-              <BookOpen className="h-6 w-6 text-green-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Science</h3>
-            <p className="text-gray-600 text-sm mb-4">Physics, Chemistry, and Biology</p>
-            <div className="bg-gray-200 rounded-full h-2 mb-2">
-              <div className="bg-green-600 h-2 rounded-full" style={{ width: '60%' }}></div>
-            </div>
-            <p className="text-xs text-gray-500">60% Complete</p>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-600">No subjects found for your class. Please update your class information.</p>
           </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer">
-            <div className="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-              <BookOpen className="h-6 w-6 text-purple-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">English</h3>
-            <p className="text-gray-600 text-sm mb-4">Literature and language skills</p>
-            <div className="bg-gray-200 rounded-full h-2 mb-2">
-              <div className="bg-purple-600 h-2 rounded-full" style={{ width: '85%' }}></div>
-            </div>
-            <p className="text-xs text-gray-500">85% Complete</p>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer">
-            <div className="bg-orange-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-              <BookOpen className="h-6 w-6 text-orange-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Social Studies</h3>
-            <p className="text-gray-600 text-sm mb-4">History and geography</p>
-            <div className="bg-gray-200 rounded-full h-2 mb-2">
-              <div className="bg-orange-600 h-2 rounded-full" style={{ width: '45%' }}></div>
-            </div>
-            <p className="text-xs text-gray-500">45% Complete</p>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer">
-            <div className="bg-pink-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-              <BookOpen className="h-6 w-6 text-pink-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Computer Science</h3>
-            <p className="text-gray-600 text-sm mb-4">Programming and algorithms</p>
-            <div className="bg-gray-200 rounded-full h-2 mb-2">
-              <div className="bg-pink-600 h-2 rounded-full" style={{ width: '30%' }}></div>
-            </div>
-            <p className="text-xs text-gray-500">30% Complete</p>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer">
-            <div className="bg-indigo-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-              <BookOpen className="h-6 w-6 text-indigo-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Art & Design</h3>
-            <p className="text-gray-600 text-sm mb-4">Creative and visual arts</p>
-            <div className="bg-gray-200 rounded-full h-2 mb-2">
-              <div className="bg-indigo-600 h-2 rounded-full" style={{ width: '90%' }}></div>
-            </div>
-            <p className="text-xs text-gray-500">90% Complete</p>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Recent Activity */}
@@ -180,6 +217,96 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Chapter Modal */}
+      {isModalOpen && selectedSubject && (
+        <div className="fixed inset-0  bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl mt-15" >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex-1 min-w-0">
+                <h2 className="text-2xl font-bold text-gray-900 capitalize truncate">
+                  {selectedSubject.name.replace(/[-_]/g, ' ')}
+                </h2>
+                <p className="text-gray-600 mt-1 text-sm">
+                  {getProgressPercentage(selectedSubject)}% Complete • {selectedSubject.chapters.length} Chapters
+                </p>
+              </div>
+              <button 
+                onClick={closeModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors ml-4 flex-shrink-0"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">Progress</span>
+                <span className="text-sm text-gray-500">
+                  {completedChapters[selectedSubject.name]?.length || 0} of {selectedSubject.chapters.length}
+                </span>
+              </div>
+              <div className="bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${getProgressPercentage(selectedSubject)}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Chapters List */}
+            <div className="p-6 max-h-96 overflow-y-auto">
+              <div className="space-y-3">
+                {selectedSubject.chapters.map((chapter, index) => {
+                  const isCompleted = completedChapters[selectedSubject.name]?.includes(index);
+                  
+                  return (
+                    <div 
+                      key={index}
+                      className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => toggleChapterCompletion(selectedSubject.name, index)}
+                    >
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                        isCompleted 
+                          ? 'bg-green-500 border-green-500' 
+                          : 'border-gray-300 hover:border-green-400'
+                      }`}>
+                        {isCompleted && (
+                          <CheckCircle className="h-3 w-3 text-white" />
+                        )}
+                      </div>
+                      <span className={`flex-1 text-sm leading-relaxed ${
+                        isCompleted 
+                          ? 'text-gray-500 line-through' 
+                          : 'text-gray-900'
+                      }`}>
+                        {chapter}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">
+                  Click on chapters to mark them as complete
+                </span>
+                <button 
+                  onClick={closeModal}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
