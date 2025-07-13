@@ -4,88 +4,142 @@ const axios = require('axios');
 
 
 exports.chatWithAI = async (req, res) => {
-   try {
-      const { user_input, sessionId, class_num, subject, chapter } = req.body;
-      const userId = req.user.userId;
+  try {
+    const { user_input, sessionId, class_num, subject, chapter } = req.body;
+    const userId = req.user.userId;
 
-      if (!user_input || !class_num || !subject || !chapter) {
-         return res.status(400).json({
-         success: false,
-         message: "Required fields: user_input, class_num, subject, chapter",
-         });
+    // 🔍 Validate required inputs
+    if (!user_input || !class_num || !subject || !chapter) {
+      return res.status(400).json({
+        success: false,
+        message: "Required fields: user_input, class_num, subject, chapter",
+      });
+    }
+
+    let session;
+    let cid;
+    let messages = [];
+    let isNewSession = false;
+
+    // ✅ Case 1: Existing Session
+    if (sessionId) {
+      session = await ChatSession.findOne({ _id: sessionId, user: userId });
+
+      if (!session) {
+        return res.status(404).json({
+          success: false,
+          message: "Session not found",
+        });
       }
 
-      let session;
-      let messages = [];
+      cid = session.cid;
+      console.log(session)
+      console.log("in the old one ",cid) // ✅ Get cid from DB
+      const previousMessages = await ChatMessage.find({ session: sessionId }).sort({ createdAt: 1 });
+      previousMessages.forEach(doc => messages.push(...doc.messages));
 
-      if (sessionId) {
-         // 🔁 Existing session
-         session = await ChatSession.findOne({ _id: sessionId, user: userId });
-         if (!session) {
-         return res.status(404).json({ success: false, message: "Session not found" });
-         }
-
-         // 🗃️ Get previous messages from DB
-         const previousMessages = await ChatMessage.find({ session: sessionId }).sort({ createdAt: 1 });
-
-         previousMessages.forEach((doc) => {
-         messages.push(...doc.messages); // flatten all previous messages
-         });
-
-      } else {
-         // 🆕 New session
-         session = await ChatSession.create({
-         user: userId,
-         title: user_input.substring(0, 30),
-         class_num,
-         subject,
-         chapter,
-         });
-      }
-
-      // ➕ Add user's current message
-      messages.push({ role: "user", content: user_input });
-
-      // 📡 Call Code4Bharat AI API
-      const payload = {
-         messages,
-         user_input,
-         class_num,
-         subject,
-         chapter,
-      };
-
-      const response = await axios.post(
-         "https://InsaneJSK-Code4Bharat-API.hf.space/chat-ncert",
-         payload
+    } else {
+      // ✅ Case 2: New Session
+      const upsertRes = await axios.get(
+        'https://InsaneJSK-Code4Bharat-API.hf.space/upsert-chapter',
+        {
+          params: { class_num, subject, chapter },
+        }
       );
 
-      const assistantReply = response.data?.response || "Sorry, no response from AI.";
+      cid = upsertRes.data?.cid;
+      if (!cid) {
+        return res.status(500).json({
+          success: false,
+          message: "Missing cid from upsert-chapter response",
+        });
+      }
 
-      // ➕ Add assistant response
-      messages.push({ role: "assistant", content: assistantReply });
-
-      // 💾 Save message pair to DB
-      await ChatMessage.create({
-         session: session._id,
-         messages: [
-         { role: "user", content: user_input },
-         { role: "assistant", content: assistantReply },
-         ],
+      session = await ChatSession.create({
+        user: userId,
+        title: user_input.substring(0, 30),
+        class_num,
+        subject,
+        chapter,
+        cid, // ✅ Save cid in DB
       });
+      console.log("new Upsert ,",cid)
 
-      return res.status(200).json({
-         success: true,
-         reply: assistantReply,
-         messages,
-         sessionId: session._id,
-      });
+      isNewSession = true;
+    }
 
-   } catch (err) {
-      console.error("Chat error:", err);
-      return res.status(500).json({ success: false, message: "Chat failed" });
-   }
+    // ➕ Add user input
+    messages.push({ role: "user", content: user_input });
+
+    // 🧠 Prepare and send payload to chat-ncert
+    const payload = {
+      cid: cid, // ✅ Always use cid from DB (whether existing or just saved)
+      messages,
+      user_input,
+      class_num,
+      subject,
+      chapter,
+    };
+   //  console.log("📦 Payload being sent to chat-ncert:", payload);
+
+    const response = await axios.post(
+      "https://InsaneJSK-Code4Bharat-API.hf.space/chat-ncert",
+      payload
+    );
+
+    const assistantReply = response.data?.response || "No response from AI.";
+    messages.push({ role: "assistant", content: assistantReply });
+
+    // 💾 Save user & assistant messages to DB
+    await ChatMessage.create({
+      session: session._id,
+      messages: [
+        { role: "user", content: user_input },
+        { role: "assistant", content: assistantReply },
+      ],
+    });
+
+    // 📝 If it’s a new session, generate a title from AI
+    if (isNewSession) {
+      try {
+        const titleRes = await axios.get(
+          "https://InsaneJSK-Code4Bharat-API.hf.space/chat-title",
+          {
+            params: {
+              user_input,
+              llm_response: assistantReply,
+            },
+          }
+        );
+
+        const updatedTitle = titleRes.data?.title;
+        if (updatedTitle) {
+          await ChatSession.findByIdAndUpdate(session._id, { title: updatedTitle });
+        }
+      } catch (err) {
+        console.error("Failed to update session title:", err.message);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      reply: assistantReply,
+      messages,
+      sessionId: session._id,
+    });
+
+  } catch (err) {
+    console.error("Chat error:", err?.response?.data || err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Chat failed",
+      error: err?.response?.data || err.message,
+    });
+  }
 };
+
+
+
 
 exports.getUserSessions = async (req, res) => {
   const { userId } = req.user;

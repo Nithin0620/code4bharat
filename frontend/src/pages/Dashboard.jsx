@@ -4,6 +4,11 @@ import { BookOpen, Users, Brain, CreditCard, TrendingUp, Clock, Award, X, CheckC
 import useAuthStore from '../ZustandStore/Auth';
 import { useNavigate } from 'react-router-dom';
 import chaptersData from '../data/chapters_per_subject.json';
+import { useChatStore } from '../ZustandStore/chatStore';
+import { MessageCircle } from 'lucide-react';
+import { formatChatDate } from '../../utility/formatChatDate';
+// import { dasboardChatClickHandler } from './ChatBot';
+
 
 const Dashboard = () => {
   const cardsRef = useRef(null);
@@ -30,6 +35,7 @@ const Dashboard = () => {
   };
 
   const userSubjects = getUserSubjects();
+
 
   // Subject colors for variety
   const subjectColors = [
@@ -80,22 +86,28 @@ const Dashboard = () => {
     return Math.round((completedForSubject.length / subject.chapters.length) * 100);
   };
 
-  useEffect(() => {
-    
-    // gsap.fromTo(
-    //   statsRef.current.children,
-    //   { opacity: 0, y: 20 },
-    //   { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out' }
-    // );
+  const {fetchSessions,sessions} = useChatStore();
 
+  const handleRecentChatClick = async (session) => {
+    // setIsSessionSelected(session)
+    // dasboardChatClickHandler(session);
+    navigate('/chatbot');
+  };
+
+
+  useEffect(() => {
+    fetchSessions();  // Load recent chats
     gsap.fromTo(
       cardsRef.current.children,
       { opacity: 0, scale: 0.9 },
       { opacity: 1, scale: 1, duration: 0.8, stagger: 0.1, delay: 0.3, ease: 'back.out(1.7)' }
     );
-    if(isAuthenticated) navigate("/dashboard")
-    console.log(isAuthenticated,user)
+    if (isAuthenticated) navigate("/dashboard");
   }, []);
+
+
+  
+
 
   return (
     <div className="p-4 md:p-8">
@@ -136,6 +148,35 @@ const Dashboard = () => {
           </div>
         </div>
       </div> */}
+
+      <div className="mb-10">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Recent Chats</h2>
+
+        {sessions.length > 0 ? (
+          <div className="space-y-3">
+            {sessions.slice(0, 3).map((session) => (
+              <div
+                key={session._id}
+                onClick={() => handleRecentChatClick(session)}
+                title={session.title}
+                className="p-4 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 cursor-pointer flex items-start space-x-3 transition"
+              >
+                <div className="bg-blue-100 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
+                  <MessageCircle className="h-4 w-4 text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{session.title}</p>
+                  <p className="text-xs text-gray-500 truncate mt-0.5">{session.chapter}</p>
+                  <p className="text-xs text-gray-400">{formatChatDate(session.createdAt)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500">No recent chats yet.</p>
+        )}
+      </div>
+
 
       {/* Learning Resources Grid */}
       <div className="mb-8">

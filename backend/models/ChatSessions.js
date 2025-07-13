@@ -26,6 +26,10 @@ const chatSessionSchema = new mongoose.Schema({
       type: Date, 
       default: Date.now 
    },
+   cid: {
+      type: String,
+      required: false,
+   },
 });
 
 module.exports = mongoose.model("ChatSession", chatSessionSchema);

@@ -1,130 +1,25 @@
-import { useState, useRef, useEffect } from 'react';
-import { Send, MessageCircle, Bot, User, ChevronDown, Menu, X, Clock } from 'lucide-react';
+import { useState, useRef, useEffect, useDebugValue } from 'react';
+import { Send, MessageCircle, Bot, User, ChevronDown, Menu, X, Clock, Plus } from 'lucide-react';
 import useAuthStore from '../ZustandStore/Auth';
 import chaptersData from '../data/chapters_per_subject.json';
+import { useChatStore } from '../ZustandStore/chatStore';
+import { useYoutubeStore } from '../ZustandStore/Yt-SearchStore';
+import {toast} from "react-hot-toast"
 
+// export const dasboardChatClickHandler= (session)=>{
+//     handleCha(session)
+// }
 
-const chatsJson= {
-    "messages": [
-        {
-            "role": "user",
-            "content": "What is nutrition in animals?",
-            "_id": "6872c74404332718f321cbbd"
-        },
-        {
-            "role": "assistant",
-            "content": "According to the NCERT book, nutrition in animals, also known as heterotrophic nutrition, involves the intake of complex material prepared by other organisms. Animals, including humans, cannot make their own food like plants do, so they need to consume other organisms or plants to obtain energy and nutrients. This process involves the breakdown of complex substances into simpler ones that can be used by the body for growth, maintenance, and energy. In humans, this process occurs in the alimentary canal, which includes the mouth, esophagus, stomach, small intestine, and large intestine, with the help of digestive enzymes and other specialized structures. (Figure 5.6, Page 85)",
-            "_id": "6872c74404332718f321cbbe"
-        },
-        {
-            "role": "user",
-            "content": "And what about plants?",
-            "_id": "6872c77504332718f321cbc5"
-        },
-        {
-            "role": "assistant",
-            "content": "According to the NCERT book, plants get the raw materials required for photosynthesis from the following sources: \n- Water is taken up from the soil by the roots in terrestrial plants.\n- Carbon dioxide is taken from the atmosphere through stomata on the leaves.\n- Nitrogen, phosphorus, iron, and magnesium are taken up from the soil by the roots. \n\nThis information can be found on page 84 of the NCERT book.",
-            "_id": "6872c77504332718f321cbc6"
-        },
-        {
-            "role": "user",
-            "content": "And what about plants?"
-        },
-        {
-            "role": "assistant",
-            "content": "According to the NCERT book, page 82, plants get each of the raw materials required for photosynthesis from the following sources: \n- Carbon dioxide and water are taken in from the atmosphere and soil, respectively.\n- Other materials like nitrogen, phosphorus, iron, and magnesium are taken up from the soil through the roots. \n- Nitrogen is taken up in the form of inorganic nitrates or nitrites, or as organic compounds prepared by bacteria from atmospheric nitrogen."
-        }
-    ],
-    "sessionId": "6872c74004332718f321cbba"
-}
-
-const youtubeVideos={
-    "results": [
-        {
-            "title": "The Third level Class 12 | Animated | Full (हिन्दी में) Explained | Third Level Class 12 in Hindi",
-            "url": "https://www.youtube.com/watch?v=UAYdy-eDWjk",
-            "views": 3352719,
-            "upload_date": "2023-07-24T10:00:10Z",
-            "days_old": 719,
-            "score": 3351439.42,
-            "channel": "Educational Bhaiya"
-        },
-        {
-            "title": "The Third Level Class 12 animated video The Third Level Class 12 animation in English",
-            "url": "https://www.youtube.com/watch?v=AxLTshcNuXQ",
-            "views": 625118,
-            "upload_date": "2022-03-23T09:28:44Z",
-            "days_old": 1207,
-            "score": 460719.38,
-            "channel": "Students Heaven"
-        },
-        {
-            "title": "The Third Level  Class 12 English Explanation In Tamil",
-            "url": "https://www.youtube.com/watch?v=6axA0woKHxQ",
-            "views": 308504,
-            "upload_date": "2022-05-23T02:30:01Z",
-            "days_old": 1147,
-            "score": 218010.85,
-            "channel": "English Abaca"
-        }
-    ]
-}
-
-// Mock recent chats data
-const recentChatsData = {
-  "success": true,
-  "data": [
-    {
-      "_id": "6872c74004332718f321cbba",
-      "user": "6872a819928562c45f68aa9a",
-      "title": "What is nutrition in animals?",
-      "class_num": 10,
-      "subject": "science",
-      "chapter": "Life Processes",
-      "createdAt": "2025-07-12T20:36:16.917Z",
-      "__v": 0
-    },
-    {
-      "_id": "6872c6fe5e78ccf414601df8",
-      "user": "6872a819928562c45f68aa9a",
-      "title": "What is nutrition in animals?",
-      "class_num": 10,
-      "subject": "science",
-      "chapter": "Life Processes",
-      "createdAt": "2025-07-12T20:35:10.416Z",
-      "__v": 0
-    }
-  ]
-};
 
 const ChatBot = () => {
-  // Helper function to convert chatsJson messages to component format
-  const convertChatsToMessages = () => {
-    const convertedMessages = [
-      {
-        id: 1,
-        type: 'bot',
-        content: 'Hello! I\'m your AI study assistant. How can I help you today?',
-        timestamp: new Date()
-      }
-    ];
-    
-    // Convert messages from chatsJson
-    if (chatsJson.messages) {
-      chatsJson.messages.forEach((msg, index) => {
-        convertedMessages.push({
-          id: index + 2,
-          type: msg.role === 'user' ? 'user' : 'bot',
-          content: msg.content,
-          timestamp: new Date(Date.now() - (chatsJson.messages.length - index) * 60000) // Simulate timestamps
-        });
-      });
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      type: 'assistant',
+      content: 'Hello! I\'m your AI study assistant. How can I help you today?',
+      timestamp: new Date()
     }
-    
-    return convertedMessages;
-  };
-
-  const [messages, setMessages] = useState(convertChatsToMessages());
+  ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState('');
@@ -132,13 +27,39 @@ const ChatBot = () => {
   const [isSubjectDropdownOpen, setIsSubjectDropdownOpen] = useState(false);
   const [isChapterDropdownOpen, setIsChapterDropdownOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [recentChats, setRecentChats] = useState(recentChatsData.data);
-  const [activeChat, setActiveChat] = useState(null);
   const [showVideos, setShowVideos] = useState(false);
   const messagesEndRef = useRef(null);
 
-  const { formData } = useAuthStore();
-  const userClass = formData?.whichClass || '6';
+  // Zustand stores
+  const { 
+    sessions, 
+    currentSessionId, 
+    loading: chatLoading, 
+    error: chatError,
+    sendMessage,
+    fetchSessions,
+    fetchMessagesBySessionId,
+    SidebarLoading,
+    
+  } = useChatStore();
+
+
+  // useEffect(()=>{
+  //   handleChatSelect(isSessionSelected._id)
+  // },isSessionSelected)
+  
+  
+  const { 
+    videos, 
+    loading: youtubeLoading, 
+    error: youtubeError,
+    fetchYoutubeVideos
+  } = useYoutubeStore();
+
+  const user = useAuthStore();
+  // console.log(user)
+  const userClass = user?.user?.profile?.class || '6';
+  // console.log(userClass)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -148,8 +69,13 @@ const ChatBot = () => {
     scrollToBottom();
   }, [messages]);
 
+  // Fetch sessions on component mount
+  useEffect(() => {
+    fetchSessions();
+  }, [fetchSessions]);
+
   // Get subjects for user's class
-  const getSubjectsForClass = () => {
+   const getSubjectsForClass = () => {
     const classData = chaptersData[userClass];
     return classData ? Object.keys(classData) : [];
   };
@@ -161,58 +87,174 @@ const ChatBot = () => {
     return classData?.[selectedSubject] || [];
   };
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!inputMessage.trim()) return;
-
-    // Check if the message is requesting YouTube videos
-    if (inputMessage.toLowerCase().includes('youtube') || inputMessage.toLowerCase().includes('videos')) {
-      setShowVideos(true);
-    }
-
-    const userMessage = {
-      id: messages.length + 1,
-      type: 'user',
-      content: inputMessage,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
-    setIsTyping(true);
-
-    // Simulate bot response
-    setTimeout(() => {
-      const botResponse = {
-        id: messages.length + 2,
-        type: 'bot',
-        content: getBotResponse(inputMessage),
+  // Start new chat
+  const startNewChat = () => {
+    setMessages([
+      {
+        id: 1,
+        type: 'assistant',
+        content: 'Hello! I\'m your AI study assistant. How can I help you today?',
         timestamp: new Date()
-      };
-      setMessages(prev => [...prev, botResponse]);
-      setIsTyping(false);
-    }, 1000);
+      }
+    ]);
+    useChatStore.setState({ currentSessionId: null });
+    setIsSidebarOpen(false);
   };
 
-  const getBotResponse = (message) => {
-    const lowerMessage = message.toLowerCase();
-    
-    // Enhanced responses based on selected subject/chapter
-    if (selectedSubject && selectedChapter) {
-      return `I can help you with ${selectedSubject} - ${selectedChapter}. What specific concept or problem would you like me to explain?`;
+  // Handle sending message
+
+const handleSendMessage = async (e) => {
+  e.preventDefault();
+  if (!inputMessage.trim()) return;
+
+  const userMessage = {
+    id: Date.now(),
+    type: 'user',
+    content: inputMessage,
+    timestamp: new Date(),
+  };
+
+  setMessages(prev => [...prev, userMessage]);
+  const messageToSend = inputMessage;
+  setInputMessage('');
+  setIsTyping(true);
+
+  // Fetch from state or props
+  const class_num = parseInt(userClass);
+  const subject = selectedSubject;
+  const chapter = selectedChapter;
+
+  try {
+    if (!class_num) {
+      toast.error('We need to know which class you are studying in');
+      setMessages(prev => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: 'assistant',
+          content: 'Please tell me which class you are studying in.',
+          timestamp: new Date(),
+        },
+      ]);
+      return;
     }
-    
-    if (lowerMessage.includes('math') || lowerMessage.includes('mathematics')) {
-      return 'I can help you with mathematics! What specific math topic would you like to study? I can assist with algebra, calculus, geometry, and more.';
-    } else if (lowerMessage.includes('science') || lowerMessage.includes('physics') || lowerMessage.includes('chemistry')) {
-      return 'Science is fascinating! Are you looking for help with Physics, Chemistry, or Biology? I can explain concepts, help with problems, and suggest study materials.';
-    } else if (lowerMessage.includes('study') || lowerMessage.includes('learn')) {
-      return 'Great! I can help you create effective study plans, suggest learning techniques, and provide practice questions. What subject would you like to focus on?';
-    } else if (lowerMessage.includes('quiz') || lowerMessage.includes('test')) {
-      return 'I can help you prepare for quizzes and tests! Would you like me to create practice questions for a specific subject or help you review key concepts?';
+
+    if (!subject || !chapter) {
+      toast.error('Please select subject and chapter first');
+      setMessages(prev => [
+        ...prev,
+        {
+          id: Date.now() + 2,
+          type: 'assistant',
+          content: 'Please select which subject and chapter you want to study.',
+          timestamp: new Date(),
+        },
+      ]);
+      return;
+    }
+
+    console.log({
+      sessionId: currentSessionId,
+      user_input: messageToSend,
+      class_num,
+      subject,
+      chapter,
+    });
+
+    const response = await sendMessage({
+      sessionId: currentSessionId,
+      user_input: messageToSend,
+      class_num,
+      subject,
+      chapter,
+    });
+
+    if (response?.success && response?.reply) {
+      const botMessage = {
+        id: Date.now() + 3,
+        type: 'assistant',
+        content: response.reply,
+        timestamp: new Date(),
+      };
+      fetchSessions();
+      setMessages(prev => [...prev, botMessage]);
+
+      // Update session if new
+      if (response.sessionId && !currentSessionId) {
+        useChatStore.setState({ currentSessionId: response.sessionId });
+      }
+
+      fetchSessions();
     } else {
-      return 'I\'m here to help with your studies! You can ask me about any subject, request explanations of concepts, or get help with homework. What would you like to learn about?';
+      throw new Error('No response from server');
     }
+  } catch (error) {
+    console.error("this is the error",error);
+    setMessages(prev => [
+      ...prev,
+      {
+        id: Date.now() + 4,
+        type: 'assistant',
+        content: 'Something went wrong. Please try again.',
+        timestamp: new Date(),
+      },
+    ]);
+  } finally {
+    setIsTyping(false);
+  }
+};
+
+  
+
+  // Handle chat selection from sidebar
+  const handleChatSelect = async (session) => {
+    setIsTyping(true);
+    try {
+      console.log(session)
+      await fetchMessagesBySessionId(session._id);
+      
+      // Get the messages from the store
+      const sessionMessages = useChatStore.getState().messages;
+      
+      // Convert API messages to component format
+      const convertedMessages = [
+        {
+          id: 1,
+          type: 'assistant',
+          content: 'Hello! I\'m your AI study assistant. How can I help you today?',
+          timestamp: new Date()
+        }
+      ];
+      
+      if (sessionMessages && sessionMessages.length > 0) {
+        sessionMessages.forEach((msg, index) => {
+          convertedMessages.push({
+            id: index + 2,
+            type: msg.role === 'user' ? 'user' : 'assistant',
+            content: msg.content,
+            timestamp: new Date(msg.createdAt || Date.now())
+          });
+        });
+      }
+      
+      setMessages(convertedMessages);
+      setIsSidebarOpen(false);
+    } catch (error) {
+      console.error('Error loading chat:', error);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  // if(isChatSelectedFromDashboard){
+  //   handleChatSelect(session);
+  // }
+
+  // Handle YouTube video fetch
+  const handleFetchYoutubeVideos = async (query) => {
+    const searchQuery = query || `${selectedSubject} ${selectedChapter}` || 'education';
+    await fetchYoutubeVideos(searchQuery);
+    setShowVideos(true);
   };
 
   // Extract YouTube video ID from URL
@@ -238,13 +280,6 @@ const ChatBot = () => {
     return date.toLocaleDateString();
   };
 
-  const handleChatSelect = (chat) => {
-    setActiveChat(chat);
-    setIsSidebarOpen(false);
-    // Here you would typically load the chat messages for the selected chat
-    // For now, we'll just close the sidebar
-  };
-
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
@@ -257,7 +292,7 @@ const ChatBot = () => {
       </div>
 
       {/* Subject and Chapter Selection */}
-      <div className="mb-6 bg-white p-4 rounded-lg shadow-md ">
+      <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Select Subject & Chapter (Class {userClass})</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Subject Dropdown */}
@@ -273,7 +308,7 @@ const ChatBot = () => {
             </button>
             
             {isSubjectDropdownOpen && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-100 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
                 {getSubjectsForClass().map((subject) => (
                   <button
                     key={subject}
@@ -326,30 +361,45 @@ const ChatBot = () => {
 
       <div className="flex bg-white rounded-lg shadow-md h-[500px] relative">
         {/* Sidebar */}
-        <div className={`absolute inset-y-0 left-0 z-1 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+        <div className={`absolute inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0 lg:static lg:inset-0 border-r border-gray-200`}>
           <div className="flex flex-col h-full">
             {/* Sidebar Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900">Recent Chats</h2>
-              <button
-                onClick={toggleSidebar}
-                className="lg:hidden p-2 rounded-md hover:bg-gray-100"
-              >
-                <X className="h-5 w-5" />
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={startNewChat}
+                  className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+                  title="Start New Chat"
+                >
+                  <Plus className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={toggleSidebar}
+                  className="lg:hidden p-2 rounded-md hover:bg-gray-100"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
 
             {/* Recent Chats List */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {recentChats.length > 0 ? (
-                recentChats.map((chat) => (
+              {SidebarLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="text-gray-500 mt-2">Loading chats...</p>
+                </div>
+              ) : sessions.length > 0 ? (
+                sessions.map((session) => (
                   <div
-                    key={chat._id}
-                    onClick={() => handleChatSelect(chat)}
+                    key={session._id}
+                    title={session.title}
+                    onClick={() => handleChatSelect(session)}
                     className={`p-3 rounded-lg cursor-pointer transition-colors hover:bg-gray-50 border ${
-                      activeChat?._id === chat._id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                      currentSessionId === session._id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
                     }`}
                   >
                     <div className="flex items-start space-x-3">
@@ -358,13 +408,16 @@ const ChatBot = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          {chat.title}
+                          {session.title}
                         </p>
-                        {chat.chapter && (
+                        {session.chapter && (
                           <p className="text-xs text-gray-600 mt-1 truncate">
-                            {chat.chapter}
+                            {session.chapter}
                           </p>
                         )}
+                        <p className="text-xs text-gray-400 mt-1">
+                          {formatChatDate(session.createdAt)}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -382,7 +435,7 @@ const ChatBot = () => {
         {/* Sidebar Overlay for Mobile */}
         {isSidebarOpen && (
           <div 
-            className="fixed inset-0  bg-opacity-50 z-40 lg:hidden"
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
             onClick={toggleSidebar}
           />
         )}
@@ -407,11 +460,11 @@ const ChatBot = () => {
                   <p className="text-sm text-blue-100">Your AI Study Assistant</p>
                 </div>
               </div>
-              {activeChat && (
+              {selectedSubject && selectedChapter && (
                 <div className="text-right">
-                  <p className="text-sm font-medium">{activeChat.title}</p>
+                  <p className="text-sm font-medium">{selectedChapter}</p>
                   <p className="text-xs text-blue-100">
-                    {activeChat.subject} • Class {activeChat.class_num}
+                    {selectedSubject} • Class {userClass}
                   </p>
                 </div>
               )}
@@ -477,21 +530,24 @@ const ChatBot = () => {
 
           {/* Chat Input */}
           <div className="border-t p-4">
-            <form onSubmit={handleSendMessage} className="flex space-x-2">
+            <div className="flex space-x-2">
               <input
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(e)}
                 placeholder="Ask me anything about your studies..."
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                disabled={chatLoading}
               />
               <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                onClick={handleSendMessage}
+                disabled={chatLoading || !inputMessage.trim()}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
                 <Send className="h-5 w-5" />
               </button>
-            </form>
+            </div>
           </div>
         </div>
       </div>
@@ -509,40 +565,55 @@ const ChatBot = () => {
             </button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {youtubeVideos.results.map((video, index) => {
-              const videoId = getYouTubeVideoId(video.url);
-              return (
-                <div key={index} className="bg-gray-50 rounded-lg overflow-hidden">
-                  <div className="aspect-video">
-                    <iframe
-                      src={`https://www.youtube.com/embed/${videoId}`}
-                      title={video.title}
-                      className="w-full h-full"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  </div>
-                  <div className="p-3">
-                    <h3 className="font-medium text-gray-900 text-xs mb-1 line-clamp-2">
-                      {video.title}
-                    </h3>
-                    <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-                      <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-xs">
-                        {video.channel}
-                      </span>
-                      <span className="text-xs">{video.views.toLocaleString()} views</span>
+          {youtubeLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="text-gray-500 mt-2">Loading videos...</p>
+            </div>
+          ) : youtubeError ? (
+            <div className="text-center py-8">
+              <p className="text-red-500">{youtubeError}</p>
+            </div>
+          ) : videos.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {videos.map((video, index) => {
+                const videoId = getYouTubeVideoId(video.url);
+                return (
+                  <div key={index} className="bg-gray-50 rounded-lg overflow-hidden">
+                    <div className="aspect-video">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${videoId}`}
+                        title={video.title}
+                        className="w-full h-full"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
                     </div>
-                    <div className="flex items-center text-xs text-gray-400">
-                      <Clock className="h-3 w-3 mr-1" />
-                      <span>{video.days_old} days ago</span>
+                    <div className="p-3">
+                      <h3 className="font-medium text-gray-900 text-xs mb-1 line-clamp-2">
+                        {video.title}
+                      </h3>
+                      <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                        <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-xs">
+                          {video.channel}
+                        </span>
+                        <span className="text-xs">{video.views?.toLocaleString()} views</span>
+                      </div>
+                      <div className="flex items-center text-xs text-gray-400">
+                        <Clock className="h-3 w-3 mr-1" />
+                        <span>{video.days_old} days ago</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No videos found</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -550,7 +621,7 @@ const ChatBot = () => {
       <div className="mt-8">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Questions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <button
+          <button
             onClick={() => setInputMessage(
               selectedSubject && selectedChapter 
                 ? `Explain key concepts in ${selectedChapter} from ${selectedSubject}` 
@@ -574,10 +645,12 @@ const ChatBot = () => {
             </div>
           </button>
           
-          
           <button
             onClick={() => {
-              setShowVideos(true);
+              const query = selectedSubject && selectedChapter 
+                ? `${selectedSubject} ${selectedChapter}` 
+                : 'education';
+              handleFetchYoutubeVideos(query);
             }}
             className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow text-left"
           >
@@ -586,24 +659,22 @@ const ChatBot = () => {
                 <MessageCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">
-                  {selectedSubject && selectedChapter ? 'YouTube Videos' : 'Videos'}
-                </h3>
+                <h3 className="font-semibold text-gray-900">YouTube Videos</h3>
                 <p className="text-sm text-gray-600">
                   {selectedSubject && selectedChapter 
                     ? `Get videos for ${selectedChapter}` 
-                    : 'Get videos for subject'
+                    : 'Get educational videos'
                   }
                 </p>
               </div>
             </div>
           </button>
           
-       <button
+          <button
             onClick={() => setInputMessage(
               selectedSubject && selectedChapter 
                 ? `Give me flashcards for ${selectedChapter} from ${selectedSubject}` 
-                : 'Give me flashcards for subject'
+                : 'Give me flashcards for mathematics'
             )}
             className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow text-left"
           >
@@ -612,11 +683,9 @@ const ChatBot = () => {
                 <MessageCircle className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">
-                  {selectedSubject ? `${selectedSubject} Flashcards` : 'Subject Flashcards'}
-                </h3>
+                <h3 className="font-semibold text-gray-900">Flashcards</h3>
                 <p className="text-sm text-gray-600">
-                  {selectedChapter ? `Get flashcards of ${selectedChapter}` : 'Get get flashcards for subject'}
+                  {selectedChapter ? `Get flashcards for ${selectedChapter}` : 'Get study flashcards'}
                 </p>
               </div>
             </div>
@@ -626,7 +695,7 @@ const ChatBot = () => {
             onClick={() => setInputMessage(
               selectedSubject && selectedChapter 
                 ? `Give me a summary of ${selectedChapter} from ${selectedSubject}` 
-                : 'Give me practice questions for history'
+                : 'Give me practice questions'
             )}
             className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow text-left"
           >
@@ -641,7 +710,7 @@ const ChatBot = () => {
                 <p className="text-sm text-gray-600">
                   {selectedSubject && selectedChapter 
                     ? `Get summary of ${selectedChapter}` 
-                    : 'Get quiz questions to practice'
+                    : 'Get practice questions'
                   }
                 </p>
               </div>
