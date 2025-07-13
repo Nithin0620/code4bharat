@@ -10,7 +10,6 @@ const Dashboard = () => {
   const statsRef = useRef(null);
   const {isAuthenticated,user} = useAuthStore();
   const navigate = useNavigate();
-  const {formData} = useAuthStore();
   
   // Modal state
   const [selectedSubject, setSelectedSubject] = useState(null);
@@ -19,7 +18,7 @@ const Dashboard = () => {
 
   // Get subjects based on user's class
   const getUserSubjects = () => {
-    const userClass = formData?.whichClass || '1';
+    const userClass = user.profile.class || '1';
     const classData = chaptersData[userClass];
     
     if (!classData) return [];
@@ -141,7 +140,7 @@ const Dashboard = () => {
       {/* Learning Resources Grid */}
       <div className="mb-8">
         <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">
-          Your Subjects - Class {formData?.whichClass || 'Not set'}
+          Your Subjects - Class {user?.profile?.class || 'Not set'}
         </h2>
         {userSubjects.length > 0 ? (
           <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
