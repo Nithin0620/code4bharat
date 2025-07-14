@@ -170,6 +170,7 @@ const handleSendMessage = async (e) => {
       subject,
       chapter,
     });
+    console.log("response",response)
 
     if (response?.success && response?.reply) {
       const botMessage = {

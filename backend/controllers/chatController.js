@@ -34,7 +34,7 @@ exports.chatWithAI = async (req, res) => {
 
       cid = session.cid;
       console.log(session)
-      console.log("in the old one ",cid) // ✅ Get cid from DB
+      console.log("in the old one ",cid)
       const previousMessages = await ChatMessage.find({ session: sessionId }).sort({ createdAt: 1 });
       previousMessages.forEach(doc => messages.push(...doc.messages));
 
