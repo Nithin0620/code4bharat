@@ -5,11 +5,219 @@ import chaptersData from '../data/chapters_per_subject.json';
 import { useChatStore } from '../ZustandStore/chatStore';
 import { useYoutubeStore } from '../ZustandStore/Yt-SearchStore';
 import {toast} from "react-hot-toast"
+import 'katex/dist/katex.min.css';
+import { InlineMath, BlockMath } from 'react-katex';
 
-// export const dasboardChatClickHandler= (session)=>{
-//     handleCha(session)
-// }
+// Enhanced LaTeX and Markdown Message Renderer Component
+const LaTeXMessageRenderer = ({ content }) => {
+  const renderContent = (text) => {
+    // First handle LaTeX expressions
+    const parts = text.split(/(\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]|\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/);
+    
+    return parts.map((part, index) => {
+      // Block math delimiters
+      if (part.startsWith('\\[') && part.endsWith('\\]')) {
+        const math = part.slice(2, -2);
+        return (
+          <div key={index} className="my-2">
+            <BlockMath math={math} />
+          </div>
+        );
+      }
+      
+      // Display math delimiters
+      if (part.startsWith('$$') && part.endsWith('$$')) {
+        const math = part.slice(2, -2);
+        return (
+          <div key={index} className="my-2">
+            <BlockMath math={math} />
+          </div>
+        );
+      }
+      
+      // Inline math delimiters
+      if ((part.startsWith('\\(') && part.endsWith('\\)')) || 
+          (part.startsWith('$') && part.endsWith('$') && part.length > 2)) {
+        const math = part.startsWith('\\(') ? part.slice(2, -2) : part.slice(1, -1);
+        return <InlineMath key={index} math={math} />;
+      }
+      
+      // Process regular text for Markdown
+      return <span key={index}>{renderMarkdown(part)}</span>;
+    });
+  };
 
+  const renderMarkdown = (text) => {
+    // Split by lines to handle different markdown elements
+    const lines = text.split('\n');
+    const elements = [];
+    let currentParagraph = [];
+    let inCodeBlock = false;
+    let codeBlockContent = [];
+    let codeBlockLanguage = '';
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      
+      // Code blocks
+      if (line.startsWith('```')) {
+        if (inCodeBlock) {
+          // End of code block
+          elements.push(
+            <pre key={`code-${i}`} className="bg-gray-100 p-3 rounded-md my-2 overflow-x-auto">
+              <code className={`language-${codeBlockLanguage}`}>
+                {codeBlockContent.join('\n')}
+              </code>
+            </pre>
+          );
+          inCodeBlock = false;
+          codeBlockContent = [];
+          codeBlockLanguage = '';
+        } else {
+          // Start of code block
+          if (currentParagraph.length > 0) {
+            elements.push(
+              <p key={`para-${i}`} className="mb-2">
+                {renderInlineElements(currentParagraph.join(' '))}
+              </p>
+            );
+            currentParagraph = [];
+          }
+          inCodeBlock = true;
+          codeBlockLanguage = line.slice(3).trim();
+        }
+        continue;
+      }
+
+      if (inCodeBlock) {
+        codeBlockContent.push(line);
+        continue;
+      }
+
+      // Headers
+      if (line.startsWith('# ')) {
+        if (currentParagraph.length > 0) {
+          elements.push(
+            <p key={`para-${i}`} className="mb-2">
+              {renderInlineElements(currentParagraph.join(' '))}
+            </p>
+          );
+          currentParagraph = [];
+        }
+        elements.push(
+          <h1 key={`h1-${i}`} className="text-2xl font-bold mb-2 mt-4">
+            {renderInlineElements(line.slice(2))}
+          </h1>
+        );
+      } else if (line.startsWith('## ')) {
+        if (currentParagraph.length > 0) {
+          elements.push(
+            <p key={`para-${i}`} className="mb-2">
+              {renderInlineElements(currentParagraph.join(' '))}
+            </p>
+          );
+          currentParagraph = [];
+        }
+        elements.push(
+          <h2 key={`h2-${i}`} className="text-xl font-bold mb-2 mt-3">
+            {renderInlineElements(line.slice(3))}
+          </h2>
+        );
+      } else if (line.startsWith('### ')) {
+        if (currentParagraph.length > 0) {
+          elements.push(
+            <p key={`para-${i}`} className="mb-2">
+              {renderInlineElements(currentParagraph.join(' '))}
+            </p>
+          );
+          currentParagraph = [];
+        }
+        elements.push(
+          <h3 key={`h3-${i}`} className="text-lg font-bold mb-2 mt-2">
+            {renderInlineElements(line.slice(4))}
+          </h3>
+        );
+      } 
+      // Lists
+      else if (line.startsWith('- ') || line.startsWith('* ')) {
+        if (currentParagraph.length > 0) {
+          elements.push(
+            <p key={`para-${i}`} className="mb-2">
+              {renderInlineElements(currentParagraph.join(' '))}
+            </p>
+          );
+          currentParagraph = [];
+        }
+        elements.push(
+          <li key={`li-${i}`} className="ml-4 mb-1">
+            {renderInlineElements(line.slice(2))}
+          </li>
+        );
+      }
+      // Empty lines
+      else if (line.trim() === '') {
+        if (currentParagraph.length > 0) {
+          elements.push(
+            <p key={`para-${i}`} className="mb-2">
+              {renderInlineElements(currentParagraph.join(' '))}
+            </p>
+          );
+          currentParagraph = [];
+        }
+      }
+      // Regular text
+      else {
+        currentParagraph.push(line);
+      }
+    }
+
+    // Handle remaining paragraph
+    if (currentParagraph.length > 0) {
+      elements.push(
+        <p key="final-para" className="mb-2">
+          {renderInlineElements(currentParagraph.join(' '))}
+        </p>
+      );
+    }
+
+    return elements;
+  };
+
+  const renderInlineElements = (text) => {
+    // Handle inline code
+    let parts = text.split(/(`[^`]+`)/);
+    
+    return parts.map((part, index) => {
+      if (part.startsWith('`') && part.endsWith('`')) {
+        return (
+          <code key={index} className="bg-gray-100 px-1 py-0.5 rounded text-sm">
+            {part.slice(1, -1)}
+          </code>
+        );
+      }
+      
+      // Handle bold text
+      part = part.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      part = part.replace(/__(.*?)__/g, '<strong>$1</strong>');
+      
+      // Handle italic text
+      part = part.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      part = part.replace(/_(.*?)_/g, '<em>$1</em>');
+      
+      // Handle links
+      part = part.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>');
+      
+      return (
+        <span
+          key={index}
+          dangerouslySetInnerHTML={{ __html: part }}
+        />
+      );
+    });
+  };
+
+  return <div className="latex-content">{renderContent(content)}</div>;
+};
 
 const ChatBot = () => {
   const [messages, setMessages] = useState([
@@ -498,7 +706,9 @@ const handleSendMessage = async (e) => {
                       )}
                     </div>
                     <div className="flex-1" >
-                      <p className="text-sm">{message.content}</p>
+                      <div className="text-sm">
+                        <LaTeXMessageRenderer content={message.content} />
+                      </div>
                       <p  style={{ maxHeight: '400px' }} ref={messegeRef} className={`text-xs mt-1 ${
                         message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
                       }`}>
