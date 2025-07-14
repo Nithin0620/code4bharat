@@ -3,10 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { BookOpen, Mail, Lock, User } from 'lucide-react';
 import useAuthStore from '../ZustandStore/Auth';
 import { Loader } from 'lucide-react';
+import { MdOutlineClass } from "react-icons/md";
 
 
 
 const SignupPage = () => {
+
+   const classArray= [1,2,3,4,5,6,7,8,9,10,11,12]
+
    const [formData, setFormData] = useState({
       name: '',
       email: '',
@@ -90,16 +94,23 @@ const SignupPage = () => {
                <div>
                   <label className="block text-sm font-medium text-gray-700">Current Class</label>
                   <div className="mt-1 relative">
-                     <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                     <input
+                     <MdOutlineClass className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                     <select
                         name="whichClass"
-                        type=""
                         required
                         value={formData.whichClass}
                         onChange={handleChange}
-                        className="pl-10 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
-                        placeholder="Tell us your current Class"
-                     />
+                        className="pl-10 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm appearance-none"
+                     >
+                        <option value="" disabled className='text-grey-400 w-10'>
+                           Select your current class
+                        </option>
+                        {classArray.map((index,Class) => (
+                           <option className=' w-10 rounded-full overflow-y-scroll' key={index + 1} value={Class+1}>
+                              Class {Class+1}
+                           </option>
+                        ))}
+                     </select>
                   </div>
                </div>
 
